@@ -1,0 +1,36 @@
+---
+title: "Location Quotient Convergence"
+author: "Luis A"
+date: "5 de abril de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r LQ at 2 digit-convergence plot,echo=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggiraph)
+
+#st2nation4<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_state2nation_4dig.csv")
+region2nation2<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_region2nation_2dig.csv")
+sectores2<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Lista de Sectores.csv") %>% select("2012 SCIAN",name) %>% rename(SCIAN2dig="2012 SCIAN")
+
+gg_point=region2nation2 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),Manuf=if_else(SCIAN2dig==30,"Manufacturing","Services"),SCIAN2dig=as.character(SCIAN2dig)) %>% filter(anio==1994) %>% left_join(sectores2,by="SCIAN2dig") %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name))+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE)
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+  
+```
+```{r LQ at 3 digit-convergence plot,echo=FALSE}
+region2nation3<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_region2nation_3dig.csv")
+sectores3<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/sectores3dig.csv")
+
+gg_point=region2nation3 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),SCIAN2dig=substr(SCIAN3dig,1,2),Manuf=if_else(SCIAN2dig<=33,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores3,by="SCIAN3dig") %>% filter(!is.na(name)) %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE)
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+
+
+```

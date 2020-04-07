@@ -1,0 +1,159 @@
+---
+title: "Location Quotient Convergence"
+author: "Luis A"
+date: "5 de abril de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggiraph)
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LQ region to Nation
+
+### 2 digit NAICS
+
+```{r LQ at 2 digit-convergence plot,echo=FALSE,warning=FALSE}
+
+region2nation2<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_region2nation_2dig.csv")
+sectores2<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Lista de Sectores.csv") %>% select("2012 SCIAN",name) %>% rename(SCIAN2dig="2012 SCIAN")
+
+gg_point=region2nation2 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),Manuf=if_else(SCIAN2dig==30,"Manufacturing","Services"),SCIAN2dig=as.character(SCIAN2dig)) %>% filter(anio==1994) %>% left_join(sectores2,by="SCIAN2dig") %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+  
+```
+
+```{r LQ at 2 dig initial vs final,echo=FALSE,warning=FALSE}
+
+gg_point=region2nation2 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=lead(LQ),Manuf=if_else(SCIAN2dig==30,"Manufacturing","Services"),SCIAN2dig=as.character(SCIAN2dig)) %>% filter(anio==1994) %>% left_join(sectores2,by="SCIAN2dig") %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+
+```
+
+
+### 3 digit NAICS
+
+```{r LQ at 3 digit-convergence plot,echo=FALSE,warning=FALSE}
+region2nation3<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_region2nation_3dig.csv")
+sectores3<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/sectores3dig.csv")
+
+gg_point=region2nation3 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),SCIAN2dig=substr(SCIAN3dig,1,2),Manuf=if_else(SCIAN2dig<=33,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores3,by="SCIAN3dig") %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+
+
+```
+
+```{r LQ at 3 digit initial vs final,echo=FALSE,warning=FALSE}
+
+gg_point=region2nation3 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=lead(LQ),SCIAN2dig=substr(SCIAN3dig,1,2),Manuf=if_else(SCIAN2dig<=33,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores3,by="SCIAN3dig") %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
+
+### 4 digit NAICS 
+
+```{r LQ at 4 digit-convergence plot,echo=FALSE,warning=FALSE}
+
+region2nation4<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_region2nation_4dig.csv")
+sectores4<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/sectores4dig.csv") %>% select(SCIAN4dig,name)
+
+# 7221 and 7222 were grouped to 7225 since 2013,7221 is only in 1994-1999 and 7222 is in 1994-2004, 7225 appears from 2004
+# So I have to add them up so they can be compared as 7225 for all years.
+# 4692 has to be changed to 4691
+# 5233 only exists for SCIAN 1997 and it changed to 5239 it has to be changed for 1994 and 1999.
+
+# Before the plot we do the corrections
+
+region2nation4<-region2nation4 %>% mutate(share_national=share_region/LQ,SCIAN4dig=if_else(SCIAN4dig==7221 |SCIAN4dig==7222,7225,if_else(SCIAN4dig==4692,4691,if_else(SCIAN4dig==5233,5239,SCIAN4dig/1)))) %>% group_by(anio,name_region,SCIAN4dig) %>% 
+  summarise_at(vars(share_region),funs(share_region=sum(.,na.rm=TRUE),LQ=sum(.,na.rm=TRUE)/sum(share_national,na.rm=TRUE)))
+  
+
+gg_point=region2nation4 %>% filter(anio==1994 | anio==2014) %>%   mutate(LQ_g=(lead(LQ)-LQ),Manuf=if_else(SCIAN4dig<=4000,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores4,by="SCIAN4dig") %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
+
+```{r LQ at 4 digit init vs final,echo=FALSE,warning=FALSE}
+
+gg_point=region2nation4 %>% filter(anio==1994 | anio==2014) %>%   mutate(LQ_g=lead(LQ),Manuf=if_else(SCIAN4dig<=4000,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores4,by="SCIAN4dig") %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_region,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~name_region)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
+
+
+## LQ State to Nation
+
+### 2 digit NAICS
+
+```{r LQ at 2 digit-convergence plot STATES,echo=FALSE,warning=FALSE}
+
+st2nation2<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_state2nation_2dig.csv")
+state_names<-haven::read_dta("C:/Users/pc Luis/Documents/World Bank/Codes states.dta") %>% mutate(state_id=as.numeric(state_id))
+
+gg_point=st2nation2 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),Manuf=if_else(SCIAN2dig==30,"Manufacturing","Services"),SCIAN2dig=as.character(SCIAN2dig)) %>% filter(anio==1994)  %>% left_join(sectores2,by="SCIAN2dig") %>% left_join(state_names,by=c("e03"="state_id")) %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+  
+```
+
+```{r LQ at 2 digit init vs final STATES,echo=FALSE,warning=FALSE}
+
+gg_point=st2nation2 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=lead(LQ),Manuf=if_else(SCIAN2dig==30,"Manufacturing","Services"),SCIAN2dig=as.character(SCIAN2dig)) %>% filter(anio==1994)  %>% left_join(sectores2,by="SCIAN2dig") %>% left_join(state_names,by=c("e03"="state_id")) %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+  
+```
+
+### 3 digit NAICS
+
+```{r LQ at 3 digit-convergence plot STATES,echo=FALSE,warning=FALSE}
+st2nation3<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_state2nation_3dig.csv")
+
+gg_point=st2nation3 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=(lead(LQ)-LQ),SCIAN2dig=substr(SCIAN3dig,1,2),Manuf=if_else(SCIAN2dig<=33,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores3,by="SCIAN3dig") %>% left_join(state_names,by=c("e03"="state_id")) %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+
+
+```
+
+```{r LQ at 3 digit init vs final STATES,echo=FALSE,warning=FALSE}
+
+gg_point=st2nation3 %>% filter(anio==1994 | anio==2014) %>%  mutate(LQ_g=lead(LQ),SCIAN2dig=substr(SCIAN3dig,1,2),Manuf=if_else(SCIAN2dig<=33,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores3,by="SCIAN3dig") %>% left_join(state_names,by=c("e03"="state_id")) %>%  
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
+
+### 4 digit NAICS
+
+```{r LQ at 4 digit-convergence plot STATES,echo=FALSE,warning=FALSE}
+
+st2nation4<-data.table::fread("C:/Users/pc Luis/Documents/World Bank/Resultados/LQ_state2nation_4dig.csv")
+
+# 7221 and 7222 were grouped to 7225 since 2013,7221 is only in 1994-1999 and 7222 is in 1994-2004, 7225 appears from 2004
+# So I have to add them up so they can be compared as 7225 for all years.
+# 4692 has to be changed to 4691
+# 5233 only exists for SCIAN 1997 and it changed to 5239 it has to be changed for 1994 and 1999.
+
+# Before the plot we do the corrections
+
+st2nation4<-st2nation4 %>% mutate(share_national=share_state/LQ,SCIAN4dig=if_else(SCIAN4dig==7221 |SCIAN4dig==7222,7225,if_else(SCIAN4dig==4692,4691,if_else(SCIAN4dig==5233,5239,SCIAN4dig/1)))) %>% group_by(anio,e03,SCIAN4dig) %>% 
+  summarise_at(vars(share_state),funs(share_state=sum(.,na.rm=TRUE),LQ=sum(.,na.rm=TRUE)/sum(share_national,na.rm=TRUE)))
+  
+
+gg_point=st2nation4 %>% filter(anio==1994 | anio==2014) %>%   mutate(LQ_g=(lead(LQ)-LQ),Manuf=if_else(SCIAN4dig<=4000,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores4,by="SCIAN4dig") %>% left_join(state_names,by=c("e03"="state_id")) %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+labs(x="LQ 1993",y="LQ long run change 1993-2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
+
+```{r LQ at 4 digit init vs final STATES,echo=FALSE,warning=FALSE}
+
+gg_point=st2nation4 %>% filter(anio==1994 | anio==2014) %>%   mutate(LQ_g=lead(LQ),Manuf=if_else(SCIAN4dig<=4000,"Manufacturing","Services")) %>% filter(anio==1994) %>% left_join(sectores4,by="SCIAN4dig") %>% left_join(state_names,by=c("e03"="state_id")) %>% 
+  ggplot()+geom_point_interactive(aes(LQ,LQ_g,shape=Manuf,color=name,size=share_state,tooltip=name,data_id=name),alpha=.5)+facet_wrap(.~state_abrev)+geom_hline(aes(yintercept=0))+geom_vline(aes(xintercept=0))+geom_abline(aes(slope=1,intercept=0),color="blue",linetype="dashed")+labs(x="LQ 1993",y="LQ 2013",size="Employment share 1993",shape="")+guides(color=FALSE,size=guide_legend(order=1),shape=guide_legend(order=2))
+girafe(ggobj=gg_point,width_svg = 6,height_svg = 4)
+```
